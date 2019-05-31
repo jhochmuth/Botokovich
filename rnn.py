@@ -1,25 +1,27 @@
 import keras
 from keras.layers import *
 
-from data_preparation import extract_notes_from_all_files
+import numpy as np
 
 
 def create_batches(pieces):
     for piece in pieces:
-        X = np.zeros((1, 64))
-        y = np.zeros((1, 64, 128))
-        for i in range(64):
+        X = np.zeros((1, len(piece)))
+        y = np.zeros((1, len(piece), 128))
+        for i in range(len(piece)):
             X[0, i] = piece[i]
-            if i == 63:
+            if i == len(piece) - 1:
                 y[0, i, piece[i]] = 1
             else:
                 y[0, i, piece[i+1]] = 1
         yield X, y
 
 
-def create_train_model():
+def create_train_model(seq_length):
     model = keras.Sequential()
-    model.add(Embedding(input_dim=128, output_dim=512, batch_input_shape=(1, 64)))
+    model.add(Embedding(input_dim=128, output_dim=512, batch_input_shape=(1, seq_length)))
+    model.add(LSTM(units=256, return_sequences=True, stateful=True))
+    model.add(Dropout(rate=.2))
     model.add(LSTM(units=256, return_sequences=True, stateful=True))
     model.add(TimeDistributed(Dense(128)))
     model.add(Activation("softmax"))
@@ -30,14 +32,16 @@ def create_prediction_model():
     model = keras.Sequential()
     model.add(Embedding(input_dim=128, output_dim=512, batch_input_shape=(1, 1)))
     model.add(LSTM(units=256, return_sequences=True, stateful=True))
+    model.add(Dropout(rate=.2))
+    model.add(LSTM(units=256, return_sequences=True, stateful=True))
     model.add(TimeDistributed(Dense(128)))
     model.add(Activation("softmax"))
     return model
 
 
-def train(pieces, num_epochs):
-    model = create_train_model()
-    model.compile(loss = "categorical_crossentropy", optimizer = "adam", metrics = ["accuracy"])
+def train(pieces, num_epochs, seq_length):
+    model = create_train_model(seq_length)
+    model.compile(loss="categorical_crossentropy", optimizer="adam", metrics=["accuracy"])
 
     for epoch in range(num_epochs):
         print("Epoch: {}".format(epoch+1))
@@ -46,22 +50,36 @@ def train(pieces, num_epochs):
             loss, accuracy = model.train_on_batch(x, y)
         print("Loss: {}, Accuracy: {}". format(loss, accuracy))
 
-    return model
+    model.save_weights("model.h5")
 
 
-pieces = extract_notes_from_all_files("data/midi_files")
-pieces = [piece[:64] for piece in pieces]
-model = train(pieces, 50)
-model.save_weights("model.h5")
-model = create_prediction_model()
-model.load_weights("model.h5")
-generated = [60]
+def generate_sequence(seq_length, start_note, model_weights_file):
+    model = create_prediction_model()
+    model.load_weights(model_weights_file)
+    seq = [60]
 
-for _ in range(64):
-    batch = np.zeros((1, 1))
-    batch[0, 0] = 60
-    predicted_probs = model.predict_on_batch(batch).ravel()
-    sample = np.random.choice(range(128), size=1, p=predicted_probs)
-    generated.append(sample[0])
+    for _ in range(seq_length - 1):
+        batch = np.zeros((1, 1))
+        batch[0, 0] = start_note
+        predicted_probs = model.predict_on_batch(batch).ravel()
+        sample = np.random.choice(range(128), size=1, p=predicted_probs)
+        seq.append(sample[0])
 
-print(generated)
+    return seq
+
+
+def train_and_generate(seq_file):
+    sequences = np.load(seq_file, allow_pickle=True)
+    seq_length = len(min(sequences, key=len))
+    pieces = [piece[:seq_length] for piece in sequences]
+    train(pieces, 50, seq_length)
+    generated = generate_sequence(seq_length, 48, "model.h5")
+    print(generated)
+
+
+def main():
+    train_and_generate("pieces.npy")
+
+
+if __name__ == "__main__":
+    main()

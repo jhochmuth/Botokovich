@@ -1,5 +1,7 @@
 import os
 
+import numpy as np
+
 import py_midicsv as midi
 
 
@@ -43,9 +45,17 @@ def extract_notes_from_file(filename):
     return extract_note_values(midi_command_list)
 
 
-def extract_notes_from_all_files(directory):
+def extract_notes_from_all_files(dir):
     pieces = list()
-    for filename in os.listdir(directory):
+    for filename in os.listdir(dir):
         if filename.endswith(".mid"):
-            pieces.append(extract_notes_from_file(os.path.join(directory, filename)))
-    return pieces
+            pieces.append(extract_notes_from_file(os.path.join(dir, filename)))
+    np.save("pieces", pieces)
+
+
+def main():
+    extract_notes_from_all_files("data/midi_files")
+
+
+if __name__ == "__main__":
+    main()
