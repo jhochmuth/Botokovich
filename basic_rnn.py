@@ -50,7 +50,7 @@ def train(pieces, num_epochs, seq_length):
             loss, accuracy = model.train_on_batch(x, y)
         print("Loss: {}, Accuracy: {}". format(loss, accuracy))
 
-    model.save_weights("model.h5")
+    model.save_weights("data/model.h5")
 
 
 def generate_sequence(seq_length, start_note, model_weights_file):
@@ -68,17 +68,17 @@ def generate_sequence(seq_length, start_note, model_weights_file):
     return seq
 
 
-def train_and_generate(seq_file):
+def train_and_generate(seq_file, num_epochs):
     sequences = np.load(seq_file, allow_pickle=True)
     seq_length = len(min(sequences, key=len))
     pieces = [piece[:seq_length] for piece in sequences]
-    train(pieces, 50, seq_length)
-    generated = generate_sequence(seq_length, 48, "model.h5")
+    train(pieces, num_epochs, seq_length)
+    generated = generate_sequence(seq_length, 48, "data/model.h5")
     print(generated)
 
 
 def main():
-    train_and_generate("pieces.npy")
+    train_and_generate("data/pieces.npy", 50)
 
 
 if __name__ == "__main__":
