@@ -27,10 +27,20 @@ val['seq'] = str_seqs[train_val_ind:]
 
 # Create databunch
 data_lm = TextLMDataBunch.from_df("data", train_df=train, valid_df=val, text_cols='seq')
-data_bunch = data_lm.create(data_lm.train_ds, data_lm.valid_ds)
+
+# Set hyperparameters of AWD_LSTM
+config = awd_lstm_lm_config.copy()
+config['emb_sz'] = 2
+config['n_hid'] = 200
 
 # Create model
-learner = language_model_learner(data=data_bunch, arch=AWD_LSTM, pretrained=False)
+learner = language_model_learner(data=data_lm, arch=AWD_LSTM, pretrained=False, config=config)
 
 # Train model
 learner.fit(epochs=10)
+
+# Save trained model
+learner.save("awd_lstm")
+
+# Create prediction starting
+print(learner.predict("xxbos 60 60 55", n_words=50))
