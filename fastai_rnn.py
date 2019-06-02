@@ -11,8 +11,9 @@ config['n_hid'] = 500
 config['weight_p'] = .1
 config['hidden_p'] = .05
 
-epochs = 1
+epochs = 10
 bs = 10
+lr = .1
 
 
 def collect_sequences(filename):
@@ -50,7 +51,7 @@ def create_databunch(train, val, bs):
 
 def create_model_and_train(data_lm, config, epochs):
     learner = language_model_learner(data=data_lm, arch=AWD_LSTM, pretrained=False, config=config)
-    learner.fit(epochs=epochs)
+    learner.fit(epochs=epochs, lr=lr)
     learner.save("awd_lstm")
     return learner
 
