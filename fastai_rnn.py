@@ -62,13 +62,15 @@ def predict(learner, start, length):
 
 
 def main():
-    sequences = collect_sequences("data/pieces.npy")
+    """
+    sequences = collect_sequences("data/cello_sequences.npy")
     sequences = truncate_sequences(sequences)
     str_seqs = convert_lists_to_strings(sequences)
     train, val = create_train_val_sets(str_seqs)
     data_lm = create_databunch(train, val, bs)
     learner = create_model_and_train(data_lm, config, epochs)
     print(predict(learner, "60", 10))
+    """
 
 
 if __name__ == "__main__":

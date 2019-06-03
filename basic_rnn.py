@@ -78,7 +78,7 @@ def train_and_generate(seq_file, num_epochs):
 
 
 def main():
-    train_and_generate("data/pieces.npy", 50)
+    train_and_generate("data/cello_sequences.npy", 50)
 
 
 if __name__ == "__main__":

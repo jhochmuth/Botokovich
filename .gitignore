@@ -212,3 +212,4 @@ dmypy.json
 
 *.h5
 *.npy
+*.mid
