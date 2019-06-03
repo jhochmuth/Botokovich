@@ -11,9 +11,9 @@ config['n_hid'] = 500
 config['weight_p'] = .1
 config['hidden_p'] = .05
 
-epochs = 10
+epochs = 50
 bs = 10
-lr = .1
+lr = .01
 
 
 def collect_sequences(filename):
@@ -71,6 +71,16 @@ def main():
     learner = create_model_and_train(data_lm, config, epochs)
     print(predict(learner, "60", 10))
     """
+    sequences = np.load("data/chord_sequences.npy", allow_pickle=True)
+    sequences = truncate_sequences(sequences)
+    train, val = create_train_val_sets(sequences)
+    data_lm = create_databunch(train, val, bs)
+    learner = create_model_and_train(data_lm, config, epochs)
+
+    test_sequence = ["0" for _ in range(48)]
+    test_sequence[12], test_sequence[24], test_sequence[28] = "1", "1", "1"
+    test_sequence = "".join(test_sequence)
+    print(predict(learner, test_sequence, 50))
 
 
 if __name__ == "__main__":

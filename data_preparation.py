@@ -82,8 +82,6 @@ def extract_simplified_chord_encoding(filename):
                 if ind < 400:
                     chords_time[ind].append(int(command[4]) + transposition_value)
 
-    # 36-84
-    # TODO: Change so that notes are modified instead of deleted.
     for timestep in chords_time:
         delete_notes = list()
         for note in timestep:
@@ -183,18 +181,20 @@ def extract_simplified_chord_encodingv2(filename):
     return chord_sequence
 
 
-def extract_chords_from_all_files(dir, extraction_method):
+def extract_chords_from_all_files(dir, output_file, extraction_method):
     sequences = list()
     for filename in os.listdir(dir):
         if filename.endswith(".mid") and filename not in BROKEN_FILES:
             sequences.append(extraction_method(os.path.join(dir, filename)))
-    np.save("data/chord_sequences", sequences)
+
+    print("Saving file to: {}".format(output_file))
+    np.save(output_file, sequences)
 
 
 def main():
     #extract_notes_from_all_files("data/midi_files/bach_cello_suites")
-    #extract_chords_from_all_files("data/midi_files/piano", extract_simplified_chord_encoding)
-    extract_chords_from_all_files("data/midi_files/piano", extract_simplified_chord_encodingv2)
+    #extract_chords_from_all_files("data/midi_files/piano", "data/chord_sequences", extract_simplified_chord_encoding)
+    extract_chords_from_all_files("data/midi_files/piano", "data/chord_sequences", extract_simplified_chord_encodingv2)
 
 
 if __name__ == "__main__":

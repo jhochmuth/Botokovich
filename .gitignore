@@ -213,3 +213,6 @@ dmypy.json
 *.h5
 *.npy
 *.mid
+*.pth
+*.xml
+*.iml
