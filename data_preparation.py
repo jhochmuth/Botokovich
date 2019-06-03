@@ -130,7 +130,7 @@ def extract_simplified_chord_encoding(filename):
 
 
 def extract_simplified_chord_encodingv2(filename):
-    print("Extracting chords from: {}".format(filename))
+    """Uses music21 library to extract chords at each timestep."""
     time_steps = [list() for _ in range(200 * 12)]
     stream = music21.midi.translate.midiFilePathToStream(filename)
 
@@ -181,10 +181,35 @@ def extract_simplified_chord_encodingv2(filename):
     return chord_sequence
 
 
-def extract_chords_from_all_files(dir, output_file, extraction_method):
+def extract_note_encoding(filename):
+    """Function to extract notewise encoding. This version specifies when notes are stopped."""
+    chord_sequence = extract_simplified_chord_encodingv2(filename)
+    chord_sequence = chord_sequence.split(" ")
+    note_sequence = ""
+
+    current_notes = set()
+    for chord in chord_sequence:
+        stopped_notes = set()
+        for note_index in current_notes:
+            if chord[note_index] == "0":
+                stopped_notes.add(note_index)
+                note_sequence = "{} stop{}".format(note_sequence, str(note_index))
+        for note_index in stopped_notes:
+            current_notes.remove(note_index)
+        for i, char in enumerate(chord):
+            if char == "1":
+                note_sequence = "{} {}".format(note_sequence, str(i))
+                current_notes.add(i)
+        note_sequence = "{} step".format(note_sequence)
+
+    return note_sequence
+
+
+def extract_sequences_from_all_files(dir, output_file, extraction_method):
     sequences = list()
     for filename in os.listdir(dir):
         if filename.endswith(".mid") and filename not in BROKEN_FILES:
+            print("Extracting sequences from: {}".format(filename))
             sequences.append(extraction_method(os.path.join(dir, filename)))
 
     print("Saving file to: {}".format(output_file))
@@ -193,8 +218,9 @@ def extract_chords_from_all_files(dir, output_file, extraction_method):
 
 def main():
     #extract_notes_from_all_files("data/midi_files/bach_cello_suites")
-    #extract_chords_from_all_files("data/midi_files/piano", "data/chord_sequences", extract_simplified_chord_encoding)
-    extract_chords_from_all_files("data/midi_files/piano", "data/chord_sequences", extract_simplified_chord_encodingv2)
+    #extract_sequences_from_all_files("data/midi_files/piano", "data/chord_sequences", extract_simplified_chord_encoding)
+    #extract_sequences_from_all_files("data/midi_files/piano", "data/chord_sequences", extract_simplified_chord_encodingv2)
+    extract_sequences_from_all_files("data/midi_files/piano", "data/note_sequences", extract_note_encoding)
 
 
 if __name__ == "__main__":
