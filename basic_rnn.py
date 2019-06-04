@@ -68,7 +68,7 @@ def generate_sequence(seq_length, start_note, model_weights_file):
     return seq
 
 
-def train_and_generate(seq_file, num_epochs):
+def train_and_generate_only_notes(seq_file, num_epochs):
     sequences = np.load(seq_file, allow_pickle=True)
     seq_length = len(min(sequences, key=len))
     pieces = [piece[:seq_length] for piece in sequences]
@@ -78,7 +78,7 @@ def train_and_generate(seq_file, num_epochs):
 
 
 def main():
-    train_and_generate("data/cello_sequences.npy", 50)
+    train_and_generate_only_notes("data/note_sequences.npy", 50)
 
 
 if __name__ == "__main__":
