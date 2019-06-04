@@ -216,3 +216,4 @@ dmypy.json
 *.pth
 *.xml
 *.iml
+*.csv

@@ -1,3 +1,6 @@
+"""Uses language models architecture from the fastai library.
+
+"""
 from fastai.text import *
 
 import numpy as np
@@ -51,6 +54,7 @@ def create_databunch(train, val, bs):
 def create_model_and_train(data_lm, config, epochs):
     learner = language_model_learner(data=data_lm, arch=AWD_LSTM, pretrained=False, config=config)
     learner.fit(epochs=epochs, lr=lr)
+    learner.load()
     learner.save("awd_lstm")
     return learner
 

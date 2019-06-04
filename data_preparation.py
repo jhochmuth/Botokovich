@@ -10,7 +10,7 @@ from tqdm import tqdm
 
 
 # TODO: Investigate if sonat-10 is truly broken.
-BROKEN_FILES = {"data/midi_files/piano/sonat-10.mid"}
+BROKEN_FILES = {"data/train_midi_files/piano/sonat-10.mid"}
 
 KEY_TRANSPOSITION_VALUES = {0: 0,
                             1: 5,
@@ -223,10 +223,10 @@ def extract_sequences_from_all_files(dir, output_file, extraction_method):
 
 
 def main():
-    #extract_notes_from_all_files("data/midi_files/bach_cello_suites")
-    #extract_sequences_from_all_files("data/midi_files/major", "data/chord_sequences", extract_simplified_chord_encoding)
-    #extract_sequences_from_all_files("data/midi_files/major", "data/chord_sequences", extract_simplified_chord_encodingv2)
-    extract_sequences_from_all_files("data/midi_files/major", "data/note_sequences", extract_note_encoding)
+    #extract_notes_from_all_files("data/train_midi_files/bach_cello_suites")
+    #extract_sequences_from_all_files("data/train_midi_files/major", "data/chord_sequences", extract_simplified_chord_encoding)
+    #extract_sequences_from_all_files("data/train_midi_files/major", "data/chord_sequences", extract_simplified_chord_encodingv2)
+    extract_sequences_from_all_files("data/train_midi_files/major", "data/note_sequences", extract_note_encoding)
 
 
 if __name__ == "__main__":
