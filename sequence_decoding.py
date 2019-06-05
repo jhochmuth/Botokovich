@@ -5,6 +5,10 @@ import music21
 
 import pandas as pd
 
+import pygame
+
+from tqdm import tqdm
+
 
 def load_sequences_from_file(filename):
     sequences = pd.read_csv(filename)
@@ -25,7 +29,7 @@ def create_midi_file(sequence, output_filename):
     current_notes = list()
     steps = 0
     step_size = 1 / 12
-    max_length = 4
+    max_length = 1
 
     for element in sequence:
         if element == "xxbos" or element == "":
@@ -33,11 +37,15 @@ def create_midi_file(sequence, output_filename):
 
         elif element == "step":
             steps += 1
-            for note in current_notes:
+            delete_notes = list()
+            for i, note in enumerate(current_notes):
                 note[2] += 1
                 if note[2] >= max_length / step_size:
                     new_note = create_note(note[0] + 36, note[1] * step_size, note[2] * step_size)
                     notes.append(new_note)
+                    delete_notes.append(note)
+            for note in delete_notes:
+                current_notes.remove(note)
 
         elif "stop" in element:
             pitch = int(element[4:])
@@ -66,5 +74,20 @@ def create_midi_file(sequence, output_filename):
     stream.write(fmt="midi", fp=output_path)
 
 
-sequences = load_sequences_from_file("data/generated_sequences.csv")
-create_midi_file(sequences[1], "generated_7.mid")
+def convert_all_sequences_in_file(filename):
+    sequences = load_sequences_from_file(filename)
+    for i, sequence in tqdm(enumerate(sequences)):
+        create_midi_file(sequence, "generated_{}.mid".format(i))
+
+
+def play_midi_file(filename):
+    pygame.init()
+    pygame.mixer.music.load(filename)
+    pygame.mixer.music.play()
+
+    while pygame.mixer.music.get_busy():
+        pygame.time.wait(1000)
+
+
+convert_all_sequences_in_file("data/generated_sequences/sequences_300hs.csv")
+play_midi_file("data/generated_midi_files/generated_4.mid")
