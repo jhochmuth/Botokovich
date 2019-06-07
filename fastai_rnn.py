@@ -51,23 +51,23 @@ def create_databunch(train, val, bs):
     return data_lm
 
 
-def create_model_and_train(data_lm, config, epochs):
+def create_model_and_train(data_lm, config, epochs, output_file="fastai_rnn"):
     learner = language_model_learner(data=data_lm, arch=AWD_LSTM, pretrained=False, config=config)
     learner.fit(epochs=epochs, lr=lr)
     learner.load()
-    learner.save("awd_lstm")
+    learner.save(output_file)
     return learner
 
 
 def predict(learner, start, length):
     start = "xxbos " + start
-    return learner.predict(start, n_words=length)
+    return learner.predict(start, n_words=length * 12)
 
 
 def main():
     # The following code is used for training and predicting using notes without timing.
     """
-    sequences = collect_sequences("data/cello_sequences.npy")
+    sequences = collect_sequences("data/train_sequences/cello_sequences.npy")
     str_seqs = convert_lists_to_strings(sequences)
     train, val = create_train_val_sets(str_seqs)
     data_lm = create_databunch(train, val, bs)
@@ -77,7 +77,7 @@ def main():
 
     # The following code is used for training and predicting using chord_sequences
     """
-    sequences = np.load("data/chord_sequences.npy", allow_pickle=True)
+    sequences = np.load("data/train_sequences/chord_sequences.npy", allow_pickle=True)
     train, val = create_train_val_sets(sequences)
     data_lm = create_databunch(train, val, bs)
     learner = create_model_and_train(data_lm, config, epochs)
@@ -88,10 +88,12 @@ def main():
     print(predict(learner, test_sequence, 50))
     """
 
-    sequences = np.load("data/note_sequences.npy", allow_pickle=True)
+    sequences = np.load("data/train_sequences/note_sequences.npy", allow_pickle=True)
     train, val = create_train_val_sets(sequences)
     data_lm = create_databunch(train, val, bs)
     learner = create_model_and_train(data_lm, config, epochs)
+    test_sequence = "xxbos 12 24 31 step step step step step step"
+    predict(learner, test_sequence, 100)
 
 
 if __name__ == "__main__":

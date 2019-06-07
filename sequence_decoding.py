@@ -23,13 +23,11 @@ def create_note(pitch, offset, duration):
     return note
 
 
-def create_midi_file(sequence, output_filename):
+def create_midi_file(sequence, output_filename, step_size=(1/12), max_length=1):
     sequence = sequence.split(" ")
     notes = list()
     current_notes = list()
     steps = 0
-    step_size = 1 / 12
-    max_length = 1
 
     for element in sequence:
         if element == "xxbos" or element == "":
@@ -51,16 +49,16 @@ def create_midi_file(sequence, output_filename):
             pitch = int(element[4:])
             current_pitches = [n[0] for n in current_notes]
             if pitch in current_pitches:
+                index = current_pitches.index(pitch)
+                note = current_notes[index]
                 new_note = create_note(note[0] + 36, note[1] * step_size, note[2] * step_size)
                 notes.append(new_note)
-                index = current_pitches.index(pitch)
                 del current_notes[index]
 
         else:
             pitch = int(element)
             offset_steps = steps
-            duration_steps = step_size
-            current_notes.append([pitch, offset_steps, duration_steps])
+            current_notes.append([pitch, offset_steps, 0])
 
     for note in current_notes:
         new_note = create_note(note[0] + 36, note[1] * step_size, note[2] * step_size)
@@ -89,5 +87,5 @@ def play_midi_file(filename):
         pygame.time.wait(1000)
 
 
-convert_all_sequences_in_file("data/generated_sequences/sequences_300hs.csv")
-play_midi_file("data/generated_midi_files/generated_4.mid")
+#convert_all_sequences_in_file("data/generated_sequences/major_v2/300hs_10bs_001lr_40e.csv")
+play_midi_file("data/generated_midi_files/generated_0.mid")

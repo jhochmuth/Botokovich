@@ -1,5 +1,7 @@
 import os
 
+import re
+
 import music21
 
 import numpy as np
@@ -9,8 +11,7 @@ import py_midicsv as midi
 from tqdm import tqdm
 
 
-# TODO: Investigate if sonat-10 is truly broken.
-BROKEN_FILES = {"data/train_midi_files/piano/sonat-10.mid"}
+BROKEN_FILES = {"bwv984.mid", "bwv986.mid"}
 
 KEY_TRANSPOSITION_VALUES = {0: 0,
                             1: 5,
@@ -25,6 +26,8 @@ KEY_TRANSPOSITION_VALUES = {0: 0,
                             -4: 4,
                             -5: -1,
                             -6: -3}
+
+CHORALE_REGEX = re.compile("bwv(\d+).mid")
 
 
 def midi_command_formatting(command):
@@ -130,23 +133,24 @@ def extract_simplified_chord_encoding(filename):
         chords_time[i] = list(map(str, chords_time[i]))
         chords_time[i] = "".join(chords_time[i])
     chords_time = " ".join(chords_time)
+
     return chords_time
 
 
-def extract_simplified_chord_encodingv2(filename):
+def extract_chord_encodingv2(filename, steps_per_quarter=12):
     """Uses music21 library to extract chords at each timestep."""
     stream = music21.midi.translate.midiFilePathToStream(filename)
-    time_steps = [list() for _ in range(int(stream.duration.quarterLength * 12))]
+    time_steps = [list() for _ in range(int(stream.duration.quarterLength * steps_per_quarter))]
 
     for element in stream.recurse(classFilter=('Chord', 'Note')):
-        time = int(element.offset * 12)
-        duration_steps = int(element.duration.quarterLength * 12)
+        time = int(element.offset * steps_per_quarter)
+        duration_steps = int(element.duration.quarterLength * steps_per_quarter)
 
         if isinstance(element, music21.note.Note):
             for duration in range(duration_steps):
                 if time + duration > len(time_steps) - 1:
                     break
-                elif element.pitch.ps < 36 or element.pitch.ps > 84:
+                elif element.pitch.ps < 36 or element.pitch.ps > 96:
                     continue
                 elif duration == 0:
                     time_steps[time + duration].append((int(element.pitch.ps), 1))
@@ -158,7 +162,7 @@ def extract_simplified_chord_encodingv2(filename):
                 if time + duration > len(time_steps) - 1:
                     break
                 for note in element.pitches:
-                    if note.ps < 36 or note.ps > 84:
+                    if note.ps < 36 or note.ps > 96:
                         continue
                     elif duration == 0:
                         time_steps[time + duration].append((int(note.ps), 1))
@@ -173,13 +177,13 @@ def extract_simplified_chord_encodingv2(filename):
             transposed_step = list()
             for note in step:
                 transposed_pitch = note[0] + transposition_value
-                if 36 <= transposed_pitch <= 84:
+                if 36 <= transposed_pitch <= 96:
                     transposed_step.append((note[0] + transposition_value, note[1]))
             time_steps[i] = transposed_step
 
     chord_sequence = list()
     for step in time_steps:
-        chord = ["0" for _ in range(49)]
+        chord = ["0" for _ in range(61)]
         for note in step:
             chord[note[0] - 36] = str(note[1])
         chord_sequence.append("".join(chord))
@@ -187,9 +191,11 @@ def extract_simplified_chord_encodingv2(filename):
     return chord_sequence
 
 
+# TODO: Check the effects of repeated notes. Important for ensemble pieces.
+# TODO: Find out what is causing music21 library to not load offsets correctly.
 def extract_note_encoding(filename):
     """Function to extract notewise encoding. This version specifies when notes are stopped."""
-    chord_sequence = extract_simplified_chord_encodingv2(filename)
+    chord_sequence = extract_chord_encodingv2(filename)
     chord_sequence = chord_sequence.split(" ")
     note_sequence = ""
 
@@ -211,11 +217,32 @@ def extract_note_encoding(filename):
     return note_sequence
 
 
-def extract_sequences_from_all_files(dir, output_file, extraction_method):
+def midi_selection(filename, selection="all"):
+    if not filename.endswith(".mid") or filename in BROKEN_FILES:
+        return False
+
+    if selection == "all":
+        return True
+    elif selection == "bach":
+        return "bwv" in filename
+    elif selection == "chorale":
+        m = CHORALE_REGEX.match(filename)
+        return 250 <= int(m.group(1)) <= 438
+    elif selection == "haydn":
+        return "haydn" in filename
+    elif selection == "mozart":
+        return "mz" in filename
+    else:
+        raise Exception
+
+
+def extract_sequences_from_all_files(dir, output_file, extraction_method, selection="all", debug=False):
     sequences = list()
+
     for filename in tqdm(os.listdir(dir)):
-        if filename.endswith(".mid") and filename not in BROKEN_FILES:
-            print("Extracting sequences from: {}".format(filename))
+        if midi_selection(filename, selection):
+            if debug:
+                print("Extracting sequences from: {}".format(filename))
             sequences.append(extraction_method(os.path.join(dir, filename)))
 
     print("Saving file to: {}".format(output_file))
@@ -225,7 +252,8 @@ def extract_sequences_from_all_files(dir, output_file, extraction_method):
 def main():
     #extract_notes_from_all_files("data/train_midi_files/bach_cello_suites")
     #extract_sequences_from_all_files("data/train_midi_files/major", "data/chord_sequences", extract_simplified_chord_encoding)
-    #extract_sequences_from_all_files("data/train_midi_files/major", "data/chord_sequences", extract_simplified_chord_encodingv2)
+    #extract_sequences_from_all_files("data/train_midi_files/major", "data/chord_sequences", extract_chord_encodingv2)
+
     extract_sequences_from_all_files("data/train_midi_files/major", "data/note_sequences", extract_note_encoding)
 
 

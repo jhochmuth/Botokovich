@@ -1,3 +1,6 @@
+"""Uses keras RNN architecture.
+
+"""
 import keras
 from keras.layers import *
 
