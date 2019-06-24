@@ -81,7 +81,7 @@ def train_and_generate_only_notes(seq_file, num_epochs):
 
 
 def main():
-    train_and_generate_only_notes("data/note_sequences.npy", 50)
+    train_and_generate_only_notes("data/all_note_sequences.npy", 50)
 
 
 if __name__ == "__main__":

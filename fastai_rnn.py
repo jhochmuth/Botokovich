@@ -23,12 +23,6 @@ def collect_sequences(filename):
     return sequences
 
 
-def truncate_sequences(sequences):
-    seq_length = len(min(sequences, key=len))
-    sequences = [sequence[:seq_length] for sequence in sequences]
-    return sequences
-
-
 def convert_lists_to_strings(sequences):
     sequences = [list(map(str, sequence)) for sequence in sequences]
     str_seqs = list()
@@ -54,7 +48,6 @@ def create_databunch(train, val, bs):
 def create_model_and_train(data_lm, config, epochs, output_file="fastai_rnn"):
     learner = language_model_learner(data=data_lm, arch=AWD_LSTM, pretrained=False, config=config)
     learner.fit(epochs=epochs, lr=lr)
-    learner.load()
     learner.save(output_file)
     return learner
 
@@ -88,7 +81,7 @@ def main():
     print(predict(learner, test_sequence, 50))
     """
 
-    sequences = np.load("data/train_sequences/note_sequences.npy", allow_pickle=True)
+    sequences = np.load("data/train_sequences/all_note_sequences.npy", allow_pickle=True)
     train, val = create_train_val_sets(sequences)
     data_lm = create_databunch(train, val, bs)
     learner = create_model_and_train(data_lm, config, epochs)

@@ -212,9 +212,9 @@ dmypy.json
 
 *.h5
 *.npy
-*.mid
 *.pth
 *.xml
 *.iml
 *.csv
 file_renaming.py
+data/generated_midi_files/

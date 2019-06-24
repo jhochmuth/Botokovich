@@ -87,5 +87,6 @@ def play_midi_file(filename):
         pygame.time.wait(1000)
 
 
-#convert_all_sequences_in_file("data/generated_sequences/major_v2/300hs_10bs_001lr_40e.csv")
-play_midi_file("data/generated_midi_files/generated_0.mid")
+#convert_all_sequences_in_file("data/generated_sequences/major_v2/lr_reduction.csv")
+#play_midi_file("data/generated_midi_files/generated_9.mid")
+play_midi_file("data/exemplary_examples/major/300hs_10bs_001lr_0.mid")

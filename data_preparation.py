@@ -27,7 +27,7 @@ KEY_TRANSPOSITION_VALUES = {0: 0,
                             -5: -1,
                             -6: -3}
 
-CHORALE_REGEX = re.compile("bwv(\d+).mid")
+BACH_REGEX = re.compile("bwv(\d+).mid")
 
 
 def midi_command_formatting(command):
@@ -192,7 +192,6 @@ def extract_chord_encodingv2(filename, steps_per_quarter=12):
 
 
 # TODO: Check the effects of repeated notes. Important for ensemble pieces.
-# TODO: Find out what is causing music21 library to not load offsets correctly.
 def extract_note_encoding(filename):
     """Function to extract notewise encoding. This version specifies when notes are stopped."""
     chord_sequence = extract_chord_encodingv2(filename)
@@ -221,40 +220,63 @@ def midi_selection(filename, selection="all"):
     if not filename.endswith(".mid") or filename in BROKEN_FILES:
         return False
 
+    is_chorale = False
+    m = BACH_REGEX.match(filename)
+    if m:
+        is_chorale = 250 <= int(m.group(1)) <= 438
+
     if selection == "all":
-        return True
+        return not is_chorale
     elif selection == "bach":
-        return "bwv" in filename
-    elif selection == "chorale":
-        m = CHORALE_REGEX.match(filename)
-        return 250 <= int(m.group(1)) <= 438
+        return "bwv" in filename and not is_chorale
+    elif selection == "chorales":
+        return is_chorale
     elif selection == "haydn":
         return "haydn" in filename
     elif selection == "mozart":
         return "mz" in filename
+    elif selection == "classical":
+        return "haydn" in filename or "mz" in filename
     else:
-        raise Exception
+        raise NotImplementedError
 
 
-def extract_sequences_from_all_files(dir, output_file, extraction_method, selection="all", debug=False):
+# TODO: Add transposition to all possible keys.
+def extract_sequences_from_files(dir, extraction_method, output_file=None, selection="all", debug=False):
     sequences = list()
 
     for filename in tqdm(os.listdir(dir)):
-        if midi_selection(filename, selection):
-            if debug:
-                print("Extracting sequences from: {}".format(filename))
-            sequences.append(extraction_method(os.path.join(dir, filename)))
+        try:
+            if midi_selection(filename, selection):
+                if debug:
+                    print("Extracting sequences from: {}".format(filename))
+                sequences.append(extraction_method(os.path.join(dir, filename)))
+        except NotImplementedError:
+            print("Given selection method does not exist. Exiting.")
+            return None
 
+    if output_file is None:
+        output_file = "data/train_sequences/{}_note_sequences".format(selection)
+
+    print("Converted {} sequences.".format(len(sequences)))
     print("Saving file to: {}".format(output_file))
     np.save(output_file, sequences)
 
 
 def main():
-    #extract_notes_from_all_files("data/train_midi_files/bach_cello_suites")
-    #extract_sequences_from_all_files("data/train_midi_files/major", "data/chord_sequences", extract_simplified_chord_encoding)
-    #extract_sequences_from_all_files("data/train_midi_files/major", "data/chord_sequences", extract_chord_encodingv2)
-
-    extract_sequences_from_all_files("data/train_midi_files/major", "data/note_sequences", extract_note_encoding)
+    """
+    extract_notes_from_all_files("data/train_midi_files/bach_cello_suites")
+    extract_sequences_from_files(dir="data/train_midi_files/major",
+                                     extraction_method=extract_simplified_chord_encoding
+                                     output_file="data/train_sequences/chord_sequences",)
+    extract_sequences_from_files(dir="data/train_midi_files/major",
+                                     extraction_method=extract_chord_encodingv2
+                                     output_file="data/chord_sequences",)
+    """
+    extract_sequences_from_files(dir="data/train_midi_files/major",
+                                 extraction_method=extract_note_encoding,
+                                 output_file="data/train_sequences/all_note_sequences",
+                                 selection="all")
 
 
 if __name__ == "__main__":
