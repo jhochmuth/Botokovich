@@ -3,26 +3,28 @@
 """
 import keras
 from keras.layers import *
+from keras.preprocessing.text import Tokenizer
+from keras.utils import to_categorical
 
 import numpy as np
 
 
-def create_batches(pieces):
-    for piece in pieces:
-        X = np.zeros((1, len(piece)))
-        y = np.zeros((1, len(piece), 128))
-        for i in range(len(piece)):
-            X[0, i] = piece[i]
-            if i == len(piece) - 1:
-                y[0, i, piece[i]] = 1
-            else:
-                y[0, i, piece[i+1]] = 1
-        yield X, y
+def create_tokens(filename):
+    sequences = np.load(filename)
+    sequences = sequences.split()
+    tokenizer = Tokenizer()
+    tokenizer.fit_on_texts(sequences)
+    sequences = tokenizer.texts_to_sequences(sequences)
+    vocab_size = len(tokenizer.word_index) + 1
+    X, y = sequences[:, :-1], sequences[:, -1]
+    y = to_categorical(y, num_classes=vocab_size)
+    seq_length = X.shape[1]
+    return vocab_size, seq_length, X, y
 
 
-def create_train_model(seq_length):
+def create_train_model(vocab_size, seq_length):
     model = keras.Sequential()
-    model.add(Embedding(input_dim=128, output_dim=512, batch_input_shape=(1, seq_length)))
+    model.add(Embedding(input_dim=vocab_size, output_dim=512, input_length=seq_length))
     model.add(LSTM(units=256, return_sequences=True, stateful=True))
     model.add(Dropout(rate=.2))
     model.add(LSTM(units=256, return_sequences=True, stateful=True))
@@ -31,27 +33,21 @@ def create_train_model(seq_length):
     return model
 
 
-def create_prediction_model():
+def create_prediction_model(vocab_size):
     model = keras.Sequential()
-    model.add(Embedding(input_dim=128, output_dim=512, batch_input_shape=(1, 1)))
+    model.add(Embedding(input_dim=vocab_size, output_dim=512))
     model.add(LSTM(units=256, return_sequences=True, stateful=True))
     model.add(Dropout(rate=.2))
     model.add(LSTM(units=256, return_sequences=True, stateful=True))
-    model.add(TimeDistributed(Dense(128)))
+    model.add(TimeDistributed(Dense(vocab_size)))
     model.add(Activation("softmax"))
     return model
 
 
-def train(pieces, num_epochs, seq_length):
+def train(X, y, num_epochs, seq_length):
     model = create_train_model(seq_length)
     model.compile(loss="categorical_crossentropy", optimizer="adam", metrics=["accuracy"])
-
-    for epoch in range(num_epochs):
-        print("Epoch: {}".format(epoch+1))
-        loss, accuracy = 0, 0
-        for i, (x, y) in enumerate(create_batches(pieces)):
-            loss, accuracy = model.train_on_batch(x, y)
-        print("Loss: {}, Accuracy: {}". format(loss, accuracy))
+    model.fit(X, y, batch_size=128, epochs=num_epochs)
 
     model.save_weights("data/keras_only_notes_model.h5")
 
@@ -71,17 +67,15 @@ def generate_sequence(seq_length, start_note, model_weights_file):
     return seq
 
 
-def train_and_generate_only_notes(seq_file, num_epochs):
-    sequences = np.load(seq_file, allow_pickle=True)
-    seq_length = len(min(sequences, key=len))
-    pieces = [piece[:seq_length] for piece in sequences]
-    train(pieces, num_epochs, seq_length)
-    generated = generate_sequence(seq_length, 48, "models/keras_only_notes_model.h5")
-    print(generated)
+def train_and_generate(seq_file, num_epochs):
+    vocab_size, seq_length, X, y = create_tokens("data/train_sequences/all_note_sequences.npy")
+    train(X, y, num_epochs, seq_length)
+    #generated = generate_sequence(seq_length, 48, "models/keras_only_notes_model.h5")
+    #print(generated)
 
 
 def main():
-    train_and_generate_only_notes("data/all_note_sequences.npy", 50)
+    train_and_generate("data/all_note_sequences.npy", 50)
 
 
 if __name__ == "__main__":
