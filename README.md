@@ -10,3 +10,16 @@ If the project leads to generated music that is successful enough, a web applica
 
 ## Related Research
 TODO: Document academic papers investigating music generation.
+
+## Examples of Generated Pieces
+Examples of generated music can be found in the "data/generated_sequences" directory. Examples created using a model trained on only Bach chorales will be found in the "chorales" directory, while those created using a model trained on baroque and classical era pieces (excluding Bach chorales) are found in the "major" directory (the name of the directory alludes to the fact that separate models are trained for major and minor key pieces).
+
+So far, all generated examples have been created by feeding the same fragment to the trained language model. Some of the hyperparameter settings used to generate a specific sequence can be found in the name of each file.
+
+Only examples that were judged to have at least some musical value were kept.
+
+A commendable sequence is a sequence which contains at least one short phrase that is musically interesting. It is acceptable for a majority of the sequence to be musically boring or even include "mistakes" as long as it fulfills this qualification.
+
+An exemplary sequence is a sequence which contains only some "mistakes" and is also musically interesting for a significant portion of the sequence.
+
+Because of the nature of music, there is necessarily a large amount of ambiguity in judging the musical value of a sequence. 
