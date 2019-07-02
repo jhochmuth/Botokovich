@@ -12,7 +12,7 @@ If the project leads to generated music that is successful enough, a web applica
 TODO: Document academic papers investigating music generation.
 
 ## Examples of Generated Pieces
-Examples of generated music can be found in the "data/generated_sequences" directory. Examples created using a model trained on only Bach chorales will be found in the "chorales" directory, while those created using a model trained on baroque and classical era pieces (excluding Bach chorales) are found in the "major" directory (the name of the directory alludes to the fact that separate models are trained for major and minor key pieces).
+Examples of generated music can be found in the "data/generated_examples" directory. Examples created using a model trained on only Bach chorales will be found in the "chorales" directory, while those created using a model trained on baroque and classical era pieces (excluding Bach chorales) are found in the "major" directory (the name of the directory alludes to the fact that separate models are trained for major and minor key pieces).
 
 So far, all generated examples have been created by feeding the same fragment to the trained language model. Some of the hyperparameter settings used to generate a specific sequence can be found in the name of each file.
 
