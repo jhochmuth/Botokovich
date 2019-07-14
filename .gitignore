@@ -218,3 +218,4 @@ dmypy.json
 *.csv
 file_renaming.py
 data/generated_midi_files/
+.DS_Store
