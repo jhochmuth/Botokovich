@@ -10,7 +10,7 @@ from keras.utils import to_categorical
 import numpy as np
 
 
-def create_tokens(filename):
+def create_tokens2(filename):
     sequences = np.load(filename)
     num_sequences = len(sequences)
     tokenizer = Tokenizer()
@@ -21,17 +21,40 @@ def create_tokens(filename):
     X, y = sequences[:][:-1], sequences[:][-1]
     X = np.reshape(X, (num_sequences-1, 300, 1))
     y = to_categorical(y, num_classes=vocab_size)
-    print(y.shape)
+    seq_length = 300
+    return vocab_size, seq_length, X, y
+
+
+def create_tokens(filename):
+    sequences = np.load(filename)
+    tokenizer = Tokenizer()
+    tokenizer.fit_on_texts(sequences)
+    X = list()
+    y = list()
+
+    for seq in sequences:
+        seq_arr = seq.split()
+        for length in range(300-1):
+            X.append(seq_arr[:length + 1])
+            y.append(seq_arr[length + 1])
+
+    X = tokenizer.texts_to_sequences(X)
+    y = tokenizer.texts_to_sequences(y)
+    X = pad_sequences(X, 300)
+    vocab_size = len(tokenizer.word_index) + 1
+    X = np.reshape(X, (len(X), 300, 1))
+    y = to_categorical(y, num_classes=vocab_size)
     seq_length = 300
     return vocab_size, seq_length, X, y
 
 
 def create_train_model(vocab_size, seq_length):
     model = keras.Sequential()
-    #model.add(Embedding(input_dim=vocab_size, output_dim=256, input_shape=(300, 1)))
-    model.add(LSTM(units=256, return_sequences=True, stateful=False, input_shape=(300, 1)))
-    #model.add(Dropout(rate=.2))
+    #model.add(Embedding(input_dim=vocab_size, output_dim=512, input_shape=(300, 1)))
+    model.add(LSTM(256, input_shape=(seq_length, 1), return_sequences=True))
     model.add(LSTM(units=256, return_sequences=True, stateful=False))
+    #model.add(Dropout(rate=.2))
+    model.add(LSTM(units=256, stateful=False))
     model.add(Dense(vocab_size))
     model.add(Activation("softmax"))
     return model
@@ -39,11 +62,12 @@ def create_train_model(vocab_size, seq_length):
 
 def create_prediction_model(vocab_size):
     model = keras.Sequential()
-    model.add(Embedding(input_dim=vocab_size, output_dim=512))
-    model.add(LSTM(units=256, return_sequences=True, stateful=True))
-    model.add(Dropout(rate=.2))
-    model.add(LSTM(units=256, return_sequences=True, stateful=True))
-    model.add(TimeDistributed(Dense(vocab_size)))
+    #model.add(Embedding(input_dim=vocab_size, output_dim=512, input_shape=(300, 1)))
+    model.add(LSTM(256, return_sequences=True))
+    model.add(LSTM(units=256, return_sequences=True, stateful=False))
+    #model.add(Dropout(rate=.2))
+    model.add(LSTM(units=256, stateful=False))
+    model.add(Dense(vocab_size))
     model.add(Activation("softmax"))
     return model
 
