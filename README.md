@@ -2,6 +2,8 @@
 A project to investigate the applicability of deep learning to music generation.
 Please note: this project is still in an early experimental stage.
 
+![Generated music img](https://github.com/jhochmuth/Botokovich/blob/master/data/generated_examples/exemplary_examples/chorales/sheetmusic_300hs_10bs_001lr_40e_0.png)
+
 Visit this [link](https://drive.google.com/file/d/1MtvIiXnByA16t_IBB8ZZC_4ppqlmgbHT/view?usp=sharing) to hear an example of music created using the techniques outlined here. This example was created using a model trained on Bach chorales.
 
 ## Specifics
