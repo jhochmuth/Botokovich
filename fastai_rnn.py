@@ -9,13 +9,11 @@ import pandas as pd
 
 
 config = awd_lstm_lm_config.copy()
-config['n_hid'] = 100
-#config['weight_p'] = .1
-#config['hidden_p'] = .05
+config['n_hid'] = 300
 
-epochs = 50
-bs = 5
-lr = .01
+epochs = 40
+bs = 10
+lr = .001
 
 
 def collect_sequences(filename):
@@ -52,9 +50,10 @@ def create_model_and_train(data_lm, config, epochs, output_file="fastai_rnn"):
     return learner
 
 
-def predict(learner, start, length):
-    start = "xxbos " + start
-    return learner.predict(start, n_words=length * 12)
+def predict(learner, start, beats_length):
+    if not start.startswith('xxbox'):
+        start = "xxbos " + start
+    return learner.predict(start, n_words=beats_length * 12)
 
 
 def main():
@@ -81,10 +80,11 @@ def main():
     print(predict(learner, test_sequence, 50))
     """
 
-    sequences = np.load("data/train_sequences/all_note_sequences.npy", allow_pickle=True)
+    sequences = np.load("data/train_sequences/chorale_note_sequences.npy", allow_pickle=True)
     train, val = create_train_val_sets(sequences)
     data_lm = create_databunch(train, val, bs)
     learner = create_model_and_train(data_lm, config, epochs)
+    learner.export('model.pkl')
     test_sequence = "xxbos 12 24 31 step step step step step step"
     predict(learner, test_sequence, 100)
 
